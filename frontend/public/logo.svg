@@ -1,0 +1,18 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ExamOnline logo">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#dbeafe"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#bg)"/>
+  <path d="M38 52c0-6.627 5.373-12 12-12h28c6.627 0 12 5.373 12 12v28c0 6.627-5.373 12-12 12H50c-6.627 0-12-5.373-12-12V52Z" fill="none" stroke="url(#accent)" stroke-width="6"/>
+  <path d="M45 60h38M45 74h24" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+  <path d="M77 78l8 8 14-16" fill="none" stroke="#fbbf24" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="88" cy="40" r="6" fill="#fbbf24"/>
+  <path d="M88 30v-8M80 40h-8M96 40h8M82.343 34.343l-5.657-5.657M93.657 34.343l5.657-5.657" stroke="#fbbf24" stroke-width="3" stroke-linecap="round"/>
+</svg>

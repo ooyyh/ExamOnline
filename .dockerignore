@@ -1,0 +1,10 @@
+.git
+.idea
+.vscode
+**/target
+**/node_modules
+**/dist
+**/.DS_Store
+backend/data
+data
+*.log
