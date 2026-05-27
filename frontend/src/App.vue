@@ -308,6 +308,9 @@
                   <option value="disabled">停用</option>
                 </select>
                 <button class="btn ghost sm" @click="loadAdmin">刷新</button>
+                <button class="btn ghost sm danger" :disabled="selectedUserIds.length === 0" @click="deleteSelectedUsers">
+                  批量删除<span v-if="selectedUserIds.length">（{{ selectedUserIds.length }}）</span>
+                </button>
               </div>
             </div>
             <div class="governance-strip">
@@ -325,9 +328,19 @@
             </div>
             <div class="table-wrap">
               <table class="table">
-                <thead><tr><th>账号</th><th>身份</th><th>组织</th><th>编号</th><th>状态</th><th>操作</th></tr></thead>
+                <thead>
+                  <tr>
+                    <th>
+                      <input type="checkbox" :checked="allUsersOnPageSelected" :disabled="paginatedUsers.length === 0" @change="toggleUserPageSelection($event.target.checked)" />
+                    </th>
+                    <th>账号</th><th>身份</th><th>组织</th><th>编号</th><th>状态</th><th>操作</th>
+                  </tr>
+                </thead>
                 <tbody>
                   <tr v-for="u in paginatedUsers" :key="u.id">
+                    <td>
+                      <input type="checkbox" :checked="selectedUserIds.includes(u.id)" @change="toggleUserSelection(u.id)" />
+                    </td>
                     <td><b>{{ u.username }}</b><div class="muted">{{ u.realName || '-' }}</div></td>
                     <td><span class="badge" :class="roleBadge(u.role)">{{ roleName(u.role) }}</span></td>
                     <td>{{ formatOrg(u) }}</td>
@@ -339,7 +352,7 @@
                       <button class="btn ghost sm danger" @click="deleteUser(u.id)">删除</button>
                     </td>
                   </tr>
-                  <tr v-if="filteredUsers.length === 0"><td colspan="6" class="empty-state">暂无数据</td></tr>
+                  <tr v-if="filteredUsers.length === 0"><td colspan="7" class="empty-state">暂无数据</td></tr>
                 </tbody>
               </table>
             </div>
@@ -358,20 +371,33 @@
               <div class="row">
                 <input v-model="adminClassFilter" class="input compact" placeholder="搜索班级…" />
                 <button class="btn ghost sm" @click="loadAdmin">刷新</button>
+                <button class="btn ghost sm danger" :disabled="selectedClassIds.length === 0" @click="deleteSelectedClasses">
+                  批量删除<span v-if="selectedClassIds.length">（{{ selectedClassIds.length }}）</span>
+                </button>
               </div>
             </div>
             <div class="table-wrap">
               <table class="table">
-                <thead><tr><th>班级</th><th>院系</th><th>专业</th><th>学生规模</th><th>操作</th></tr></thead>
+                <thead>
+                  <tr>
+                    <th>
+                      <input type="checkbox" :checked="allClassesOnPageSelected" :disabled="paginatedClasses.length === 0" @change="toggleClassPageSelection($event.target.checked)" />
+                    </th>
+                    <th>班级</th><th>院系</th><th>专业</th><th>学生规模</th><th>操作</th>
+                  </tr>
+                </thead>
                 <tbody>
                   <tr v-for="c in paginatedClasses" :key="c.id">
+                    <td>
+                      <input type="checkbox" :checked="selectedClassIds.includes(c.id)" @change="toggleClassSelection(c.id)" />
+                    </td>
                     <td>{{ c.name }}</td><td>{{ c.department }}</td><td>{{ c.major }}</td><td>{{ c.studentCount || 0 }}</td>
                     <td class="row" style="gap:4px">
                       <button class="btn ghost sm" @click="editClass(c)">编辑</button>
                       <button class="btn ghost sm danger" @click="deleteClass(c.id)">删除</button>
                     </td>
                   </tr>
-                  <tr v-if="filteredClasses.length === 0"><td colspan="5" class="empty-state">暂无数据</td></tr>
+                  <tr v-if="filteredClasses.length === 0"><td colspan="6" class="empty-state">暂无数据</td></tr>
                 </tbody>
               </table>
             </div>
@@ -422,6 +448,9 @@
               <div class="row">
                 <input v-model="teacherQuestionFilter" class="input compact" placeholder="搜索题目…" />
                 <button class="btn ghost sm" @click="loadTeacher">刷新</button>
+                <button class="btn ghost sm danger" :disabled="selectedQuestionIds.length === 0" @click="deleteSelectedQuestions">
+                  批量删除<span v-if="selectedQuestionIds.length">（{{ selectedQuestionIds.length }}）</span>
+                </button>
               </div>
             </div>
             <div class="taxonomy-strip">
@@ -602,9 +631,19 @@
           </div>
           <div class="table-wrap">
             <table class="table">
-              <thead><tr><th>ID</th><th>题目</th><th>课程路径</th><th>知识定位</th><th>类型/难度</th><th>分值/用时</th><th>标签</th><th>操作</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>
+                    <input type="checkbox" :checked="allQuestionsOnPageSelected" :disabled="paginatedQuestions.length === 0" @change="toggleQuestionPageSelection($event.target.checked)" />
+                  </th>
+                  <th>ID</th><th>题目</th><th>课程路径</th><th>知识定位</th><th>类型/难度</th><th>分值/用时</th><th>标签</th><th>操作</th>
+                </tr>
+              </thead>
               <tbody>
                 <tr v-for="q in paginatedQuestions" :key="'q'+q.id">
+                  <td>
+                    <input type="checkbox" :checked="selectedQuestionIds.includes(q.id)" @change="toggleQuestionSelection(q.id)" />
+                  </td>
                   <td><span class="badge">{{ q.id }}</span></td>
                   <td>
                     <div class="question-title">{{ q.title }}</div>
@@ -635,7 +674,7 @@
                   </td>
                 </tr>
                 <tr v-if="filteredQuestions.length === 0">
-                  <td colspan="8" class="empty-state">暂无题目，请先创建题目或调整筛选条件</td>
+                  <td colspan="9" class="empty-state">暂无题目，请先创建题目或调整筛选条件</td>
                 </tr>
               </tbody>
             </table>
@@ -655,13 +694,26 @@
             <div class="row">
               <input v-model="teacherPaperFilter" class="input compact" placeholder="搜索试卷…" />
               <button class="btn ghost sm" @click="loadTeacher">刷新</button>
+              <button class="btn ghost sm danger" :disabled="selectedPaperIds.length === 0" @click="deleteSelectedPapers">
+                批量删除<span v-if="selectedPaperIds.length">（{{ selectedPaperIds.length }}）</span>
+              </button>
             </div>
           </div>
           <div class="table-wrap">
             <table class="table">
-              <thead><tr><th>ID</th><th>试卷标题</th><th>生成方式</th><th>总分</th><th>时长</th><th>状态</th><th>操作</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>
+                    <input type="checkbox" :checked="allPapersOnPageSelected" :disabled="paginatedPapers.length === 0" @change="togglePaperPageSelection($event.target.checked)" />
+                  </th>
+                  <th>ID</th><th>试卷标题</th><th>生成方式</th><th>总分</th><th>时长</th><th>状态</th><th>操作</th>
+                </tr>
+              </thead>
               <tbody>
                 <tr v-for="p in paginatedPapers" :key="'p'+p.id" :style="p.published ? 'background:var(--primary-light)' : ''">
+                  <td>
+                    <input type="checkbox" :checked="selectedPaperIds.includes(p.id)" @change="togglePaperSelection(p.id)" />
+                  </td>
                   <td><span class="badge cyan">{{ p.id }}</span></td>
                   <td><b>{{ p.title }}</b></td>
                   <td><span class="badge blue">{{ p.autoGenerated ? '自动' : '手动' }}</span></td>
@@ -678,7 +730,7 @@
                   </td>
                 </tr>
                 <tr v-if="filteredPapers.length === 0">
-                  <td colspan="7" class="empty-state">
+                  <td colspan="8" class="empty-state">
                     <p>暂无试卷，请使用上方组卷功能创建试卷</p>
                   </td>
                 </tr>
@@ -1322,6 +1374,10 @@ const sidebarOpen = ref(false)
 const activeNavKey = ref('overview')
 const showNotif = ref(false)
 const notifications = ref([])
+const selectedUserIds = ref([])
+const selectedClassIds = ref([])
+const selectedQuestionIds = ref([])
+const selectedPaperIds = ref([])
 const userPage = ref(1)
 const classPage = ref(1)
 const logPage = ref(1)
@@ -1716,6 +1772,10 @@ const paginatedLogs = computed(() => slicePage(filteredLogs.value, logPage.value
 const paginatedQuestions = computed(() => slicePage(filteredQuestions.value, questionListPage.value, 8))
 const paginatedPapers = computed(() => slicePage(filteredPapers.value, paperListPage.value, 8))
 const paginatedHistory = computed(() => slicePage(filteredHistory.value, historyPage.value))
+const allUsersOnPageSelected = computed(() => paginatedUsers.value.length > 0 && paginatedUsers.value.every(item => selectedUserIds.value.includes(item.id)))
+const allClassesOnPageSelected = computed(() => paginatedClasses.value.length > 0 && paginatedClasses.value.every(item => selectedClassIds.value.includes(item.id)))
+const allQuestionsOnPageSelected = computed(() => paginatedQuestions.value.length > 0 && paginatedQuestions.value.every(item => selectedQuestionIds.value.includes(item.id)))
+const allPapersOnPageSelected = computed(() => paginatedPapers.value.length > 0 && paginatedPapers.value.every(item => selectedPaperIds.value.includes(item.id)))
 
 const formattedRemaining = computed(() => {
   const m = String(Math.floor(remainingSeconds.value / 60)).padStart(2, '0')
@@ -1734,6 +1794,32 @@ function slicePage(list, page, size = pageSize) {
   const start = (page - 1) * size
   return list.slice(start, start + size)
 }
+
+function toggleSelection(store, id) {
+  if (store.value.includes(id)) {
+    store.value = store.value.filter(item => item !== id)
+    return
+  }
+  store.value = [...store.value, id]
+}
+
+function togglePageSelection(store, list, checked) {
+  const ids = list.map(item => item.id)
+  if (checked) {
+    store.value = Array.from(new Set([...store.value, ...ids]))
+    return
+  }
+  store.value = store.value.filter(id => !ids.includes(id))
+}
+
+function toggleUserSelection(id) { toggleSelection(selectedUserIds, id) }
+function toggleClassSelection(id) { toggleSelection(selectedClassIds, id) }
+function toggleQuestionSelection(id) { toggleSelection(selectedQuestionIds, id) }
+function togglePaperSelection(id) { toggleSelection(selectedPaperIds, id) }
+function toggleUserPageSelection(checked) { togglePageSelection(selectedUserIds, paginatedUsers.value, checked) }
+function toggleClassPageSelection(checked) { togglePageSelection(selectedClassIds, paginatedClasses.value, checked) }
+function toggleQuestionPageSelection(checked) { togglePageSelection(selectedQuestionIds, paginatedQuestions.value, checked) }
+function togglePaperPageSelection(checked) { togglePageSelection(selectedPaperIds, paginatedPapers.value, checked) }
 
 function matches(value, keyword) {
   if (!keyword) return true
@@ -1991,6 +2077,8 @@ async function loadAdmin() {
     admin.classes = await request('/api/admin/classes')
     admin.logs = await request('/api/admin/logs')
     admin.stats = await request('/api/admin/stats')
+    selectedUserIds.value = []
+    selectedClassIds.value = []
   } catch (e) { setMessage(e.message, 'error') }
   finally { adminLoading.value = false }
 }
@@ -2051,6 +2139,33 @@ async function deleteUser(id) {
   } catch (e) { setMessage(e.message, 'error') }
 }
 
+async function deleteSelectedUsers() {
+  const ids = selectedUserIds.value
+  if (!ids.length) return
+  const ok = await openDialog({
+    tone: 'danger',
+    eyebrow: '危险操作',
+    title: '批量删除用户？',
+    message: `将删除 ${ids.length} 个用户账号，删除后不可恢复。`,
+    confirmText: '批量删除'
+  })
+  if (!ok) return
+  let failed = 0
+  for (const id of ids) {
+    try {
+      await request(`/api/admin/users/${id}?actor=${encodeURIComponent(user.value.username)}`, { method: 'DELETE' })
+    } catch {
+      failed += 1
+    }
+  }
+  await loadAdmin()
+  if (failed > 0) {
+    setMessage(`已删除 ${ids.length - failed} 个用户，${failed} 个删除失败`, 'error')
+    return
+  }
+  setMessage(`已删除 ${ids.length} 个用户`)
+}
+
 async function saveClass() {
   try {
     const method = admin.classForm.id ? 'PUT' : 'POST'
@@ -2093,9 +2208,38 @@ async function deleteClass(id) {
   } catch (e) { setMessage(e.message, 'error') }
 }
 
+async function deleteSelectedClasses() {
+  const ids = selectedClassIds.value
+  if (!ids.length) return
+  const ok = await openDialog({
+    tone: 'danger',
+    eyebrow: '组织架构',
+    title: '批量删除班级？',
+    message: `将删除 ${ids.length} 个班级，相关账号不会自动迁移。`,
+    confirmText: '批量删除'
+  })
+  if (!ok) return
+  let failed = 0
+  for (const id of ids) {
+    try {
+      await request(`/api/admin/classes/${id}?actor=${encodeURIComponent(user.value.username)}`, { method: 'DELETE' })
+    } catch {
+      failed += 1
+    }
+  }
+  await loadAdmin()
+  if (failed > 0) {
+    setMessage(`已删除 ${ids.length - failed} 个班级，${failed} 个删除失败`, 'error')
+    return
+  }
+  setMessage(`已删除 ${ids.length} 个班级`)
+}
+
 async function loadTeacher() {
   teacher.questions = await request('/api/teacher/questions')
   teacher.papers = await request('/api/teacher/papers')
+  selectedQuestionIds.value = []
+  selectedPaperIds.value = []
   if (teacher.monitorPaperId) await loadMonitor(teacher.monitorPaperId, false, false)
 }
 
@@ -2165,6 +2309,33 @@ async function deleteQuestion(id) {
     await loadTeacher()
     setMessage('题目已删除')
   } catch (e) { setMessage(e.message, 'error') }
+}
+
+async function deleteSelectedQuestions() {
+  const ids = selectedQuestionIds.value
+  if (!ids.length) return
+  const ok = await openDialog({
+    tone: 'danger',
+    eyebrow: '题库维护',
+    title: '批量删除题目？',
+    message: `将删除 ${ids.length} 道题目。`,
+    confirmText: '批量删除'
+  })
+  if (!ok) return
+  let failed = 0
+  for (const id of ids) {
+    try {
+      await request(`/api/teacher/questions/${id}?actor=${encodeURIComponent(user.value.username)}`, { method: 'DELETE' })
+    } catch {
+      failed += 1
+    }
+  }
+  await loadTeacher()
+  if (failed > 0) {
+    setMessage(`已删除 ${ids.length - failed} 道题目，${failed} 个删除失败`, 'error')
+    return
+  }
+  setMessage(`已删除 ${ids.length} 道题目`)
 }
 
 async function openPaperDetail(id) {
@@ -2267,6 +2438,34 @@ async function deletePaper(id) {
     setMessage('试卷已删除')
     addNotif('试卷已删除')
   } catch (e) { setMessage(e.message, 'error') }
+}
+
+async function deleteSelectedPapers() {
+  const ids = selectedPaperIds.value
+  if (!ids.length) return
+  const ok = await openDialog({
+    tone: 'danger',
+    eyebrow: '试卷管理',
+    title: '批量删除试卷？',
+    message: `将删除 ${ids.length} 份试卷，相关考试数据也会被清理。`,
+    confirmText: '批量删除'
+  })
+  if (!ok) return
+  let failed = 0
+  for (const id of ids) {
+    try {
+      await request(`/api/teacher/papers/${id}?actor=${encodeURIComponent(user.value.username)}`, { method: 'DELETE' })
+    } catch {
+      failed += 1
+    }
+  }
+  await loadTeacher()
+  if (failed > 0) {
+    setMessage(`已删除 ${ids.length - failed} 份试卷，${failed} 个删除失败`, 'error')
+    return
+  }
+  setMessage(`已删除 ${ids.length} 份试卷`)
+  addNotif(`已批量删除 ${ids.length} 份试卷`)
 }
 
 async function loadAnalytics(id, navigate = true) {
