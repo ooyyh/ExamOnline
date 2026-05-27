@@ -592,6 +592,23 @@
             <div class="row">
               <input v-model="teacherQuestionFilter" class="input compact" placeholder="搜索题目…" />
               <button class="btn ghost sm" @click="loadTeacher">刷新</button>
+              <select v-model="batchQuestionDifficulty" class="select compact" style="min-width: 120px">
+                <option value="">批量难度</option>
+                <option v-for="item in difficultyOptions" :key="`batch-difficulty-${item}`" :value="item">{{ item }}</option>
+              </select>
+              <button class="btn ghost sm" :disabled="selectedQuestionIds.length === 0 || !batchQuestionDifficulty" @click="updateSelectedQuestionDifficulty">
+                批量改难度
+              </button>
+              <select v-model="batchQuestionType" class="select compact" style="min-width: 140px">
+                <option value="">批量题型</option>
+                <option v-for="item in questionTypeOptions" :key="`batch-type-${item}`" :value="item">{{ item }}</option>
+              </select>
+              <button class="btn ghost sm" :disabled="selectedQuestionIds.length === 0 || !batchQuestionType" @click="updateSelectedQuestionType">
+                批量改题型
+              </button>
+              <button class="btn ghost sm danger" :disabled="selectedQuestionIds.length === 0" @click="deleteSelectedQuestions">
+                批量删除<span v-if="selectedQuestionIds.length">（{{ selectedQuestionIds.length }}）</span>
+              </button>
             </div>
           </div>
           <div class="question-filter-panel">
@@ -1378,6 +1395,8 @@ const selectedUserIds = ref([])
 const selectedClassIds = ref([])
 const selectedQuestionIds = ref([])
 const selectedPaperIds = ref([])
+const batchQuestionDifficulty = ref('')
+const batchQuestionType = ref('')
 const userPage = ref(1)
 const classPage = ref(1)
 const logPage = ref(1)
@@ -2096,6 +2115,18 @@ async function saveUser() {
   } catch (e) { setMessage(e.message, 'error') }
 }
 
+function toQuestionPayload(row, overrides = {}) {
+  return {
+    ...row,
+    ...overrides,
+    tags: normalizeTags(row.tags),
+    options: Array.isArray(row.options) ? row.options.map(item => String(item || '').trim()).filter(Boolean) : String(row.options || '').split('|').map(s => s.trim()).filter(Boolean),
+    score: Number(row.score || 0),
+    estimatedMinutes: row.estimatedMinutes ? Number(row.estimatedMinutes) : null,
+    creatorUsername: row.creatorUsername || user.value.username
+  }
+}
+
 function editUser(row) {
   activeNavKey.value = 'account-form'
   admin.userForm = { ...blankUserForm(), ...row, password: '', enabled: row.enabled !== false }
@@ -2265,14 +2296,7 @@ function statusClass(status) {
 
 async function saveQuestion() {
   try {
-    const payload = {
-      ...teacher.questionForm,
-      tags: normalizeTags(teacher.questionForm.tags),
-      options: String(teacher.questionForm.options || '').split('|').map(s => s.trim()).filter(Boolean),
-      score: Number(teacher.questionForm.score || 0),
-      estimatedMinutes: teacher.questionForm.estimatedMinutes ? Number(teacher.questionForm.estimatedMinutes) : null,
-      creatorUsername: user.value.username
-    }
+    const payload = toQuestionPayload(teacher.questionForm)
     const method = teacher.questionForm.id ? 'PUT' : 'POST'
     const url = teacher.questionForm.id ? `/api/teacher/questions/${teacher.questionForm.id}?actor=${encodeURIComponent(user.value.username)}` : `/api/teacher/questions?actor=${encodeURIComponent(user.value.username)}`
     await request(url, { method, body: payload })
@@ -2336,6 +2360,53 @@ async function deleteSelectedQuestions() {
     return
   }
   setMessage(`已删除 ${ids.length} 道题目`)
+}
+
+async function updateSelectedQuestionDifficulty() {
+  if (!batchQuestionDifficulty.value) return setMessage('请选择目标难度', 'error')
+  await updateSelectedQuestions({ difficulty: batchQuestionDifficulty.value }, `难度：${batchQuestionDifficulty.value}`)
+  batchQuestionDifficulty.value = ''
+}
+
+async function updateSelectedQuestionType() {
+  if (!batchQuestionType.value) return setMessage('请选择目标题型', 'error')
+  await updateSelectedQuestions({ type: batchQuestionType.value }, `题型：${batchQuestionType.value}`)
+  batchQuestionType.value = ''
+}
+
+async function updateSelectedQuestions(overrides, actionLabel) {
+  const ids = [...selectedQuestionIds.value]
+  if (!ids.length) return
+  const ok = await openDialog({
+    tone: 'danger',
+    eyebrow: '题库维护',
+    title: '批量修改题目？',
+    message: `将修改 ${ids.length} 道题目（${actionLabel}）。`,
+    confirmText: '批量修改'
+  })
+  if (!ok) return
+  let failed = 0
+  for (const id of ids) {
+    const target = teacher.questions.find(item => item.id === id)
+    if (!target) {
+      failed += 1
+      continue
+    }
+    try {
+      await request(`/api/teacher/questions/${id}?actor=${encodeURIComponent(user.value.username)}`, {
+        method: 'PUT',
+        body: toQuestionPayload(target, overrides)
+      })
+    } catch {
+      failed += 1
+    }
+  }
+  await loadTeacher()
+  if (failed > 0) {
+    setMessage(`已修改 ${ids.length - failed} 道题目，${failed} 个修改失败`, 'error')
+    return
+  }
+  setMessage(`已批量修改 ${ids.length} 道题目`)
 }
 
 async function openPaperDetail(id) {
