@@ -78,7 +78,7 @@ public class ExamService {
         return paperRepository.findByPublishedTrueOrderByStartTimeDesc().stream()
                 .filter(paper -> isInExamWindow(paper, now))
                 .filter(paper -> canJoinPaper(paper, classNames))
-                .map(paper -> jsonSupport.toExamSummary(paper, jsonSupport.readStringList(paper.getTargetClassesJson())))
+                .map(paper -> jsonSupport.toExamSummary(paper, jsonSupport.readTargetClasses(paper.getTargetClassesJson())))
                 .toList();
     }
 
@@ -566,8 +566,11 @@ public class ExamService {
     }
 
     private boolean canJoinPaper(ExamPaper paper, List<String> classNames) {
-        List<String> targets = jsonSupport.readStringList(paper.getTargetClassesJson());
-        return targets.isEmpty() || classNames.stream().anyMatch(targets::contains);
+        List<String> targets = jsonSupport.readTargetClasses(paper.getTargetClassesJson());
+        return targets.isEmpty() || classNames.stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .anyMatch(targets::contains);
     }
 
     private boolean isCompleted(ExamAttempt attempt) {

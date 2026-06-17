@@ -8,7 +8,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
 
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 
 @Component
 public class JsonSupport {
@@ -35,6 +38,34 @@ public class JsonSupport {
         } catch (Exception e) {
             throw new IllegalStateException("JSON parse failed", e);
         }
+    }
+
+    public List<String> readTargetClasses(String json) {
+        return normalizeTargetClasses(readStringList(json));
+    }
+
+    public List<String> normalizeTargetClasses(List<String> targetClasses) {
+        if (targetClasses == null || targetClasses.isEmpty()) {
+            return List.of();
+        }
+        List<String> values = targetClasses.stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(value -> !value.isBlank())
+                .toList();
+        if (values.isEmpty() || values.stream().anyMatch(this::isAllClassesToken)) {
+            return List.of();
+        }
+        return List.copyOf(new LinkedHashSet<>(values));
+    }
+
+    private boolean isAllClassesToken(String value) {
+        String normalized = value.replaceAll("\\s+", "").toLowerCase(Locale.ROOT);
+        return normalized.equals("*")
+                || normalized.equals("all")
+                || normalized.equals("全部")
+                || normalized.equals("全部班级")
+                || normalized.equals("所有班级");
     }
 
     public BasicDtos.QuestionView toQuestionView(Question question) {

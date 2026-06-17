@@ -503,7 +503,7 @@
                 <div class="form-group"><label class="form-label">结束时间</label><input class="input" v-model="teacher.manualForm.endTime" type="datetime-local" /></div>
               </div>
               <div class="form-group"><label class="form-label">题目ID（逗号分隔）</label><input class="input" v-model="teacher.manualForm.questionIds" placeholder="1,2,5,8" /></div>
-              <div class="form-group"><label class="form-label">目标班级（逗号分隔）</label><input class="input" v-model="teacher.manualForm.targetClasses" placeholder="计算机一班,软件二班" /></div>
+              <div class="form-group"><label class="form-label">目标班级（逗号分隔）</label><input class="input" v-model="teacher.manualForm.targetClasses" placeholder="留空表示全部班级" /></div>
               <button class="btn" @click="createManualPaper">生成手动试卷</button>
             </div>
             <hr style="border:0;border-top:1px solid var(--border);margin:14px 0" />
@@ -539,7 +539,7 @@
                 <div class="form-group"><label class="form-label">能力层级</label><select class="select" v-model="teacher.autoForm.cognitiveLevel"><option value="">不限</option><option v-for="item in cognitiveLevelOptions" :key="item.value" :value="item.value">{{ item.label }}</option></select></div>
                 <div class="form-group"><label class="form-label">标签（需全部命中）</label><input class="input" v-model="teacher.autoForm.tags" list="tagOptions" placeholder="核心考点, 易错题" /></div>
               </div>
-              <div class="form-group"><label class="form-label">目标班级（逗号分隔）</label><input class="input" v-model="teacher.autoForm.targetClasses" placeholder="全部班级" /></div>
+              <div class="form-group"><label class="form-label">目标班级（逗号分隔）</label><input class="input" v-model="teacher.autoForm.targetClasses" placeholder="留空表示全部班级" /></div>
               <div class="auto-pool-preview">
                 <span :class="autoPaperPool.length >= Number(teacher.autoForm.questionCount || 0) ? 'badge green' : 'badge red'">
                   {{ autoPaperPool.length >= Number(teacher.autoForm.questionCount || 0) ? '题量充足' : '题量不足' }}
@@ -2103,6 +2103,13 @@ function parseTags(value) {
   if (Array.isArray(value)) return value.map(item => String(item || '').trim()).filter(Boolean)
   return value ? String(value).split(/[,，]/).map(s => s.trim()).filter(Boolean) : []
 }
+function parseTargetClasses(value) {
+  const classes = parseTags(value)
+  return classes.some(isAllClassesToken) ? [] : classes
+}
+function isAllClassesToken(value) {
+  return ['*', 'all', '全部', '全部班级', '所有班级'].includes(String(value || '').replace(/\s+/g, '').toLowerCase())
+}
 function toDateTimePayload(value) { return value || null }
 function formatPercent(value) { return `${Math.round((value || 0) * 100)}%` }
 function formatSeconds(value) {
@@ -2199,7 +2206,7 @@ async function createManualPaper() {
       startTime: toDateTimePayload(teacher.manualForm.startTime),
       endTime: toDateTimePayload(teacher.manualForm.endTime),
       questionIds: teacher.manualForm.questionIds.split(',').map(s => Number(s.trim())).filter(Boolean),
-      targetClasses: parseTags(teacher.manualForm.targetClasses)
+      targetClasses: parseTargetClasses(teacher.manualForm.targetClasses)
     }
     await request(`/api/teacher/papers/manual?actor=${encodeURIComponent(user.value.username)}`, { method: 'POST', body: payload })
     await loadTeacher()
@@ -2230,7 +2237,7 @@ async function createAutoPaper() {
       source: teacher.autoForm.source,
       tags: normalizeTags(teacher.autoForm.tags),
       questionCount: teacher.autoForm.questionCount,
-      targetClasses: parseTags(teacher.autoForm.targetClasses)
+      targetClasses: parseTargetClasses(teacher.autoForm.targetClasses)
     }
     await request(`/api/teacher/papers/auto?actor=${encodeURIComponent(user.value.username)}`, { method: 'POST', body: payload })
     await loadTeacher()
