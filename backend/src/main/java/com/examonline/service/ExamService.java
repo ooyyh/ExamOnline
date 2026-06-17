@@ -76,7 +76,7 @@ public class ExamService {
         }
         LocalDateTime now = LocalDateTime.now();
         return paperRepository.findByPublishedTrueOrderByStartTimeDesc().stream()
-                .filter(paper -> isInExamWindow(paper, now))
+                .filter(paper -> isNotEnded(paper, now))
                 .filter(paper -> canJoinPaper(paper, classNames))
                 .map(paper -> jsonSupport.toExamSummary(paper, jsonSupport.readTargetClasses(paper.getTargetClassesJson())))
                 .toList();
@@ -563,6 +563,10 @@ public class ExamService {
         boolean afterStart = paper.getStartTime() == null || !now.isBefore(paper.getStartTime());
         boolean beforeEnd = paper.getEndTime() == null || !now.isAfter(paper.getEndTime());
         return afterStart && beforeEnd;
+    }
+
+    private boolean isNotEnded(ExamPaper paper, LocalDateTime now) {
+        return paper.getEndTime() == null || !now.isAfter(paper.getEndTime());
     }
 
     private boolean canJoinPaper(ExamPaper paper, List<String> classNames) {

@@ -970,10 +970,11 @@
                 <div>
                   <b>{{ paper.title }}</b>
                   <div class="muted">{{ paper.durationMinutes }} 分钟 · 满分 {{ paper.totalScore }} 分</div>
+                  <div class="muted">{{ paperTimeRange(paper) }}</div>
                 </div>
-                <span class="badge green" v-if="paper.published">进行中</span>
+                <span class="badge" :class="isPaperOpen(paper) ? 'green' : 'amber'">{{ paperStatusLabel(paper) }}</span>
               </div>
-              <button class="btn" @click="startExam(paper.id)" style="margin-top:4px">开始考试</button>
+              <button class="btn" :disabled="!isPaperOpen(paper)" @click="startExam(paper.id)" style="margin-top:4px">{{ paperActionLabel(paper) }}</button>
             </div>
           </div>
 
@@ -2299,6 +2300,32 @@ function statusClass(status) {
   if (status === 'REVIEW_PENDING') return 'amber'
   if (status === 'AUTO_SUBMITTED') return 'red'
   return 'cyan'
+}
+function parsePaperTime(value) { return value ? new Date(value).getTime() : null }
+function isBeforePaperStart(paper) {
+  const start = parsePaperTime(paper?.startTime)
+  return start !== null && Date.now() < start
+}
+function isAfterPaperEnd(paper) {
+  const end = parsePaperTime(paper?.endTime)
+  return end !== null && Date.now() > end
+}
+function isPaperOpen(paper) { return !isBeforePaperStart(paper) && !isAfterPaperEnd(paper) }
+function paperStatusLabel(paper) {
+  if (isBeforePaperStart(paper)) return '未开始'
+  if (isAfterPaperEnd(paper)) return '已结束'
+  return '进行中'
+}
+function paperActionLabel(paper) {
+  if (isBeforePaperStart(paper)) return '未到开始时间'
+  if (isAfterPaperEnd(paper)) return '考试已结束'
+  return '开始考试'
+}
+function formatPaperTime(value) {
+  return value ? String(value).replace('T', ' ').slice(0, 16) : '不限'
+}
+function paperTimeRange(paper) {
+  return `${formatPaperTime(paper?.startTime)} - ${formatPaperTime(paper?.endTime)}`
 }
 
 async function saveQuestion() {
